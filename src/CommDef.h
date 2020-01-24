@@ -1,8 +1,6 @@
-#define MODE_HOST_0 0x05
-#define MODE_HOST_1 0x06
-#define MODE_HOST_2 0x07
 #define CURSORBEGIN 0x00000000
 #define CURSOREND 0xFFFFFFFF
+#define SECTORSIZE 512
 
 ////////////Commands/////////
 #define CMD_GET_IC_VER 0x01
@@ -53,6 +51,12 @@
 		0x51: success
 		0x5F: failure
 */
+	#define MODE_HOST_0 0x05
+	#define MODE_HOST_1 0x07
+	#define MODE_HOST_2 0x06
+	#define MODE_HOST_SD 0x03
+	#define MODE_DEFAULT 0x00
+
 #define CMD_GET_STATUS 0x22
 	//Get interrupt status after an interrupt was triggered.
 	//Output: interrupt status (see below)
@@ -166,7 +170,6 @@
 /*	Create and open a directory (name must be set using SET_FILE_NAME).
  *	Open an already existing directory (does not truncate)
  *	Returns ERR_FOUND_NAME if the name exists but is a file
- *	Can only support a single level of directories?
  *	As with FILE_CREATE, the FAT entry can be edited (default values are the same except size is 0 and
  *	directory attribute is set)
 */
@@ -250,9 +253,18 @@
 #define ANSW_ERR_DISK_FULL 0xb1		//Disk full
 #define ANSW_ERR_FDT_OVER 0xb2		//Directory full
 #define ANSW_ERR_FILE_CLOSE 0xb4	//Attempted operation on closed file
-
+////////////////////////////////////////////
+#define ERR_LONGFILENAME 0x01
+ //File attributes
+#define ATTR_READ_ONLY 0x01 //read-only file
+#define ATTR_HIDDEN 0x02 //hidden file
+#define ATTR_SYSTEM 0x04 //system file
+#define ATTR_VOLUME_ID 0x08 //Volume label
+#define ATTR_DIRECTORY 0x10 //subdirectory (folder)
+#define ATTR_ARCHIVE 0x20 //archive (normal) file
+////////////////////////////////////////////
 enum commInterface{
-	UART,
+	UARTT,
 	SPII
 };
 
@@ -286,3 +298,10 @@ enum fileProcessENUM { // for file read/write state machine
 			uint16_t startCl;//2
 			uint32_t size;//4
 		};
+		///////////////
+		struct diskInfo{	//disk information
+			uint32_t totalSector;	//the number of total sectors (low byte first)
+			uint32_t freeSector;	//the number of free sectors (low byte first)
+			uint8_t diskFat;			//FAT type: 0x01-FAT12, 0x02-FAT16, 0x03-FAT32
+		};
+
